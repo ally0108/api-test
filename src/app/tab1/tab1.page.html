@@ -1,0 +1,43 @@
+<ion-header>
+  <ion-toolbar>
+    <div style="background-color: #e63946; color: white;">
+      <ion-buttons slot="end">
+        <ion-title>
+          <h3>Notification</h3>
+        </ion-title>
+        <ion-button (click)="logOut()">Log out</ion-button>
+      </ion-buttons>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div style="background-color: #f1faee; padding: 50px;">
+    <ion-list *ngFor="let showData of showDatas; let i of index;">
+      <ion-item>
+        <ion-text (click)="navigateToRevise(i)">{{ showData.title }}</ion-text>
+        <ion-button
+          *ngIf="userId == showData.creator.id"
+          (click)="send(i)"
+          color="medium"
+          fill="clear"
+          slot="end"
+        >
+          <ion-icon name="navigate-outline"></ion-icon>
+        </ion-button>
+        <ion-button (click)="delete(i)" color="medium" fill="clear" slot="end">
+          <ion-icon name="trash"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-list>
+    <ion-button
+      (click)="navigateToAdd()"
+      color="medium"
+      size="small"
+      slot="end"
+      strong="true"
+      style="margin-top: 40px;"
+      >Add</ion-button
+    >
+  </div>
+</ion-content>

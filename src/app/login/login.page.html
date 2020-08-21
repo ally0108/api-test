@@ -1,0 +1,36 @@
+<ion-header>
+  <ion-toolbar>
+    <div style="background-color: #e63946; color: white; font-weight: bold;">
+      <ion-title>
+        <h3>Login</h3>
+      </ion-title>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div style="background-color: #f1faee; padding: 50px;">
+    <ion-list>
+      <!-- 輸入 email -->
+      <ion-item>
+        <ion-label position="floating">email</ion-label>
+        <ion-input [(ngModel)]="email"></ion-input>
+      </ion-item>
+
+      <!-- 輸入密碼 -->
+      <ion-item>
+        <ion-label position="floating">password</ion-label>
+        <ion-input [(ngModel)]="password" type="password"></ion-input>
+      </ion-item>
+    </ion-list>
+    <!-- 送出按鈕 -->
+    <ion-button
+      (click)="submit()"
+      color="medium"
+      size="small"
+      strong="true"
+      style="margin-top: 40px;"
+      >submit</ion-button
+    >
+  </div>
+</ion-content>
