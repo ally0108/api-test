@@ -6,8 +6,8 @@ import {
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { AlertController, NavController } from "@ionic/angular";
-import { throwError } from "rxjs";
-import { catchError } from "rxjs/operators";
+import { of, throwError } from "rxjs";
+import { catchError, map, tap } from "rxjs/operators";
 
 @Component({
   selector: "app-tab1",
@@ -15,15 +15,18 @@ import { catchError } from "rxjs/operators";
   styleUrls: ["tab1.page.scss"],
 })
 export class Tab1Page implements OnInit {
-  rawResponse = null;
-  showDatas = null;
   userId = JSON.parse(localStorage.getItem("userId"));
-
-  url = "https://api.cocoing.info/admin/notifications"; ////
+  url = "https://api.cocoing.info/admin/notifications";
   reqHeader = new HttpHeaders({
     "Content-Type": "application/json",
     Authorization: "Bearer " + JSON.parse(localStorage.getItem("accessToken")),
   });
+  /**
+   * 將 data$ 的初始值設成 null Observable (Observable 裡面的資料是 null)
+   */
+  data$ = of(null);
+  accessToken = "";
+  isLoad = false;
 
   // Step 2. 在 constructor 裡面注入 HttpClient
   constructor(
@@ -37,18 +40,22 @@ export class Tab1Page implements OnInit {
 
   // Step 3. 撰寫呼叫 api 的程式碼
   ngOnInit() {
+    const accessToken = JSON.parse(localStorage.getItem("accessToken"));
+
+    if (!accessToken) {
+      console.error("你還沒有登入= =");
+
+      this.navCtrl.navigateBack("/login");
+
+      return;
+    }
+    this.accessToken = accessToken;
     this.initialize();
   }
 
-  async initialize() {
+  initialize() {
     try {
-      // 在元件初始化的時候，透過後端 api 取得資料
-      const response = await this.getAllNotificationsFromApi();
-      console.log(response);
-
-      // Step 5. 將資料顯示到畫面上
-      this.rawResponse = response;
-      this.showDatas = this.rawResponse["data"];
+      this.data$ = this.getNotificationByObservable();
     } catch (error) {
       // Step 4. 過程中如果發生錯誤，需要另外進行的錯誤處理
       console.error(error);
@@ -57,24 +64,30 @@ export class Tab1Page implements OnInit {
   }
 
   /**
-   * 從後端 api 取得所有 notification 的資料
-   *
-   * 並且將後端回應的原始資料直接顯示在畫面上
+   * 使用 Observable 的寫法來發送 api
    */
-  async getAllNotificationsFromApi() {
+  getNotificationByObservable() {
     const url = "https://api.cocoing.info/admin/notifications";
-    const reqHeader = new HttpHeaders({
-      "Content-Type": "application/json",
-      Authorization:
-        "Bearer " + JSON.parse(localStorage.getItem("accessToken")),
-    });
+    const httpOptions = {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${this.accessToken}`,
+      }),
+    };
 
-    // 這邊只是因為偷懶用了 any，還是要養成好習慣不要隨便用 any XDrz
-    // 將後端拿到的資料儲存在 local 變數中
-    const response = await this.http
-      .get<any>(url, { headers: reqHeader })
-      .toPromise();
-    return response;
+    return this.http.get<any>(url, httpOptions).pipe(
+      // 延遲兩秒，讓等待畫面顯示久一點（Ｘ
+      //delay(2000),
+
+      // 透過 tap 來查看，轉換前的樣子
+      tap((response) => console.log("before map():", response)),
+
+      // 透過 map 運算，把 response 都轉換成 response.data
+      // (換句話說就是只保留 response 中的 data)
+      map((response) => response.data),
+
+      // 透過 tap 來查看，轉換後的結果
+      tap((response) => console.log("after map():", response))
+    );
   }
 
   /**
@@ -105,8 +118,7 @@ export class Tab1Page implements OnInit {
     const body = { id: id };
     const reqHeader = new HttpHeaders({
       "Content-Type": "application/json",
-      Authorization:
-        "Bearer " + JSON.parse(localStorage.getItem("accessToken")),
+      Authorization: `Bearer ${this.accessToken}`,
     });
 
     const response = await this.http
@@ -139,8 +151,7 @@ export class Tab1Page implements OnInit {
     const body = { id: id };
     const reqHeader = new HttpHeaders({
       "Content-Type": "application/json",
-      Authorization:
-        "Bearer " + JSON.parse(localStorage.getItem("accessToken")),
+      Authorization: `Bearer ${this.accessToken}`,
       "X-HTTP-Method-Override": "delete",
     });
 
@@ -179,6 +190,27 @@ export class Tab1Page implements OnInit {
 
   navigateToRevise(index) {
     this.navCtrl.navigateForward(`/revise/${index.id}`);
+  }
+  /**
+   * 從後端 api 取得所有 notification 的資料
+   *
+   * 並且將後端回應的原始資料直接顯示在畫面上
+   */
+  async getAllNotificationsFromApi() {
+    const url = "https://api.cocoing.info/admin/notifications";
+    const reqHeader = new HttpHeaders({
+      "Content-Type": "application/json",
+      Authorization:
+        "Bearer " + JSON.parse(localStorage.getItem("accessToken")),
+    });
+
+    // 這邊只是因為偷懶用了 any，還是要養成好習慣不要隨便用 any XDrz
+    // 將後端拿到的資料儲存在 local 變數中
+    const response = await this.http
+      .get<any>(url, { headers: reqHeader })
+      .toPromise();
+
+    return response;
   }
 
   handleError = (error: HttpErrorResponse) => {

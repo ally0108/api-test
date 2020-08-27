@@ -13,7 +13,7 @@
 
 <ion-content>
   <div style="background-color: #f1faee; padding: 50px;">
-    <ion-list *ngFor="let showData of showDatas; let i of index;">
+    <ion-list *ngFor="let showData of data$ | async; let i of index;">
       <ion-item>
         <ion-text (click)="navigateToRevise(i)">{{ showData.title }}</ion-text>
         <ion-button

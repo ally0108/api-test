@@ -37,7 +37,7 @@ export class RevisePage implements OnInit {
   async initialize() {
     try {
       const response = await this.tab1Function.getAllNotificationsFromApi();
-      this.data = response["data"];
+      this.data = response.data;
       this.data.forEach((item) => {
         if (item["id"] === Number(this.id)) {
           this.data = item;
